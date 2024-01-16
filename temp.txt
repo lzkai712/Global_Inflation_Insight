@@ -5,9 +5,9 @@ conn = sqlite3.connect('global_inflation.db')
 cur = conn.cursor()
 cur.execute('''CREATE TABLE IF NOT EXISTS global_inflation_data(
             CountryCode TEXT,
-            IMFCountry Code TEXT,
+            IMFCountryCode TEXT,
             Country TEXT,
-            Indicator Type TEXT,
+            IndicatorType TEXT,
             SeriesName TEXT,
             Year_1970 REAL,
             Year_1971 REAL,
@@ -61,8 +61,7 @@ cur.execute('''CREATE TABLE IF NOT EXISTS global_inflation_data(
             Year_2019 REAL,
             Year_2020 REAL,
             Year_2021 REAL,
-            Year_2022 REAL,
-            Note TEXT
+            Year_2022 REAL
             
 )
             ''')
@@ -140,7 +139,7 @@ with open ('Global_Dataset_of_Inflation.csv') as f:
             row['2005'], row['2006'], row['2007'], row['2008'], row['2009'], 
             row['2010'], row['2011'], row['2012'], row['2013'], row['2014'], 
             row['2015'], row['2016'], row['2017'], row['2018'], row['2019'], 
-            row['2020'], row['2021'], row['2022'], row['Note']
+            row['2020'], row['2021'], row['2022']
         )
         insert_query = '''
             INSERT INTO global_inflation_data 
@@ -156,20 +155,6 @@ with open ('Global_Dataset_of_Inflation.csv') as f:
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
                     ?, ?)
         '''
-
-        #Crete user table to store user information
-        cur.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            FirstName TEXT NOT NULL
-            LastName TEXT NOT NULL
-            DateOfBirth TEXT NOT NULL
-            Location TEXT,
-            Username TEXT UNIQUE NOT NULL,
-            Password TEXT NOT NULL
-            
-        )
-    ''')
         cur.execute(insert_query, data)
         conn.commit()
         conn.close()
