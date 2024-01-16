@@ -161,12 +161,12 @@ with open ('Global_Dataset_of_Inflation.csv') as f:
         cur.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            FirstName TEXT NOT NULL
-            LastName TEXT NOT NULL
-            DateOfBirth TEXT NOT NULL
-            Location TEXT,
-            Username TEXT UNIQUE NOT NULL,
-            Password TEXT NOT NULL
+            firstname TEXT NOT NULL,
+            lastname TEXT NOT NULL,
+            dateofbirth TEXT NOT NULL,
+            location TEXT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
             
         )
     ''')

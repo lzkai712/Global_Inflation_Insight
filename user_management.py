@@ -30,7 +30,7 @@ def register():
             print("Email already exists. Please double check and try again: ")
         else:
             cur.execute('''
-                        INSERT INTO users (FistName, LastName, DateOfBirth, Location, Username, Password) 
+                        INSERT INTO users (fistname, lastname, dateOfbirth, location, username, password) 
                         VALUES(?, ?, ?, ?, ?, ?) 
                         ''',(f_name, l_name, dob, location,username, password))
             conn.commit()
@@ -65,4 +65,4 @@ def login():
         if try_again == 'n':
             break
     conn.close()
-    
+
