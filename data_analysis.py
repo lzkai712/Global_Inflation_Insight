@@ -236,64 +236,10 @@ def global_highest_lowest_inflation_rate():
 
         conn.close()
 
-def compare_countries(countries, inflation_type, year):
-    """Compare inflation rates of multiple countries for a specific year."""
-    while True:
-        print("\nCompare Countries:")
-        print("Enter 'q' to quit.")
+def compare_countries():
+    """Compare inflation rates of multiple countries for a specific year and type."""
+    pass
+  
 
-        # Ask user for countries to compare
-        countries = input("Enter countries to compare (separated by commas): ").split(',')
-        countries = [country.strip().upper() for country in countries]
 
-        if 'q' in countries:
-            print("Exiting comparison.")
-            return
 
-        print("Choose Inflation Type:")
-        print("1. Energy Consumer Price Inflation")
-        print("2. Food Consumer Price Inflation")
-        print("3. Headline Consumer Price Inflation")
-        print("4. Producer Price Inflation")
-
-        inflation_option = input("Enter the option (1-4): ")
-        inflation_table_mapping = {
-            '1': 'Energy_Consumer_Price_Inflation_Table',
-            '2': 'Food_Consumer_Price_Inflation_Table',
-            '3': 'Headline_Consumer_Price_Inflation_Table',
-            '4': 'Producer_Price_Inflation_Table'
-        }
-        inflation_table = inflation_table_mapping.get(inflation_option)
-
-        if not inflation_table:
-            print("Invalid option. Please try again.")
-            continue
-
-        conn = sqlite3.connect('global_inflation.db')
-        cur = conn.cursor()
-
-        query = f'''
-            SELECT "Country", "{year}" AS InflationRate
-            FROM {inflation_table}
-            WHERE "Country Code" IN ({', '.join(['?']*len(countries))})
-            ORDER BY InflationRate
-        '''
-
-        cur.execute(query, tuple(countries))
-        result = cur.fetchall()
-
-        if result:
-            print(f"\nComparison for {year} ({inflation_type}):")
-            for row in result:
-                print(f"{row[0]}: {row[1]}")
-
-            another_comparison = input("\nDo you want to perform another comparison? (y/n): ").lower()
-            if another_comparison != 'y':
-                print("Exiting comparison.")
-                conn.close()
-                return
-        else:
-            print("No data found for the specified countries and inflation type. Please check your inputs.")
-
-        conn.close()
-compare_countries()
