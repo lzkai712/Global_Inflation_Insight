@@ -1,6 +1,8 @@
 from data_analysis import *
 from data_management import manage_add_data,manage_update_data,manage_delete_data
 
+def is_valid_option(option):
+    return option in ['1', '2', '3', '4']
 def regular_user_interface():
     while True:
         print("\nRegular User Interface:")
@@ -15,9 +17,9 @@ def regular_user_interface():
         if choice == '1':
             search_country_data()
         elif choice == '2':
-            country_highest_lowest_rate
+            country_highest_lowest_rate()
         elif choice == '3':
-            global_highest_lowest_inflation_rate
+            global_highest_lowest_inflation_rate()
         elif choice == '4':
             compare_countries()
         elif choice == '5':
