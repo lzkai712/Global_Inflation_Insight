@@ -9,7 +9,7 @@ def main():
         if choice == '1':
             user = login()
             if user:
-                if is_manager(user["username"]):
+                if is_manager(user.get("username") or user.get("Username")):
                     manager_interface()
                 else:
                     regular_user_interface()

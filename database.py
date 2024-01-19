@@ -11,16 +11,18 @@ csv_files = [
 
 # Function to create tables
 def create_tables(cursor, table_name):
-    cursor.execute(f'''
-        CREATE TABLE {table_name} (
-            "Country Code" TEXT,
-            "IMF Country Code" TEXT,
-            "Country" TEXT,
-            "Indicator Type" TEXT,
-            "Series Name" TEXT,
-            {", ".join([f'"y{year}" INTEGER' for year in range(1970, 2023)])}
-        );
-    ''')
+    cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
+    if not cursor.fetchone():
+        cursor.execute(f'''
+            CREATE TABLE {table_name} (
+                "Country Code" TEXT,
+                "IMF Country Code" TEXT,
+                "Country" TEXT,
+                "Indicator Type" TEXT,
+                "Series Name" TEXT,
+                {", ".join([f'"y{year}" INTEGER' for year in range(1970, 2023)])}
+            );
+        ''')
 
 conn = sqlite3.connect('global_inflation.db')
 cursor = conn.cursor()
@@ -36,8 +38,17 @@ for csv_file in csv_files:
         for row in csv_reader:
             cursor.execute(f'INSERT INTO {table_name} VALUES ({", ".join(["?" for _ in range(len(row))])})', row)
 
-# Commit changes and close connection
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        FirstName TEXT NOT NULL,
+        LastName TEXT NOT NULL,
+        DateOfBirth DATE,
+        Location TEXT,
+        Username TEXT UNIQUE NOT NULL,
+        Password TEXT NOT NULL
+    )
+''')
+
 conn.commit()
 conn.close()
-
-print("Database and tables created successfully.")

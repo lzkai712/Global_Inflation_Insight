@@ -1,8 +1,6 @@
-from database import connect
+import sqlite3
 
-def connect():
-    """Connect to Databse- global_inflation.db"""
-    return connect('global_inflation.db')
+import sqlite3
 
 def manage_add_data():
     while True:
@@ -18,10 +16,9 @@ def manage_add_data():
             print("Exiting add data.")
             break
 
-        conn = connect()
+        conn = sqlite3.connect('global_inflation.db')
         cur = conn.cursor()
 
-        # Mapping option to table names
         table_mapping = {
             '1': 'Energy_Consumer_Price_Inflation_Table',
             '2': 'Food_Consumer_Price_Inflation_Table',
@@ -31,33 +28,56 @@ def manage_add_data():
 
         table_name = table_mapping.get(option)
         if table_name:
-            identifier = input("Enter the country, country code, or IMF country code for which you want to add data: ")
+            add_type = input("Choose an option:\n1. Add new data for existing country\n2. Add new data for new country\nEnter your choice: ")
+            if add_type == '1':
+                identifier = input("Enter the country, country code, or IMF country code for which you want to add data: ")
+                try:
+                    cur.execute(f'SELECT * FROM {table_name} WHERE "Country" = ? OR "Country Code" = ? OR "IMF Country Code" = ?',
+                                (identifier, identifier, identifier))
+                    existing_data = cur.fetchone()
 
-            # Check if the specified country exists in the table
-            cur.execute(f'SELECT * FROM {table_name} WHERE "Country" = ? OR "Country Code" = ? OR "IMF Country Code" = ?',
-                        (identifier, identifier, identifier))
-            existing_data = cur.fetchone()
+                    if existing_data:
+                        new_column_name = input("Enter the new column name (e.g., 'y2023'): ")
+                        new_value = input("Enter the value: ")
+                        
+                        try:
+                            #Add a new column
+                            cur.execute(f'ALTER TABLE {table_name} ADD COLUMN "{new_column_name}" TEXT')
+                        except sqlite3.OperationalError as e:
+                            # Catch exception error if column already exist
+                            print(f"Column '{new_column_name}' already exists. Updating the existing data instead.")
+                        
+                        # Update the existing data with the new value
+                        cur.execute(f'UPDATE {table_name} SET "{new_column_name}" = ? WHERE "Country" = ? OR "Country Code" = ? OR "IMF Country Code" = ?',
+                                    (new_value, identifier, identifier, identifier))
+                        print("New data added successfully!")
+                        conn.commit()
+                    else:
+                        print(f"The specified country '{identifier}' does not exist in the table. Please choose a valid country.")
+                except sqlite3.OperationalError as e:
+                    print(f"Error: {e}")
+                    
+            elif add_type == '2':
+                # Add new row for a new country
+                country_code = input("Enter Country Code: ")
+                imf_country_code = input("Enter IMF Country Code: ")
+                country_name = input("Enter Country: ")
+                indicator_type = input("Enter Indicator Type: ")
+                series_name = input("Enter Series Name: ")
 
-            if existing_data:
-                new_column_name = input("Enter the new column name (e.g., 'y2023'): ")
-                new_value = input("Enter the value: ")
-
-                # Alter the table to add the new column
-                cur.execute(f'ALTER TABLE {table_name} ADD COLUMN "{new_column_name}" TEXT')
-
-                # Insert the new data into the table for the specified country
-                cur.execute(f'UPDATE {table_name} SET "{new_column_name}" = ? WHERE "Country" = ? OR "Country Code" = ? OR "IMF Country Code" = ?',
-                            (new_value, identifier, identifier, identifier))
-
-                print("New data added successfully!")
+                insert_query = f'INSERT INTO {table_name} ("Country Code", "IMF Country Code", "Country", "Indicator Type", "Series Name") VALUES (?, ?, ?, ?, ?)'
+                
+                cur.execute(insert_query, (country_code, imf_country_code, country_name, indicator_type, series_name))
+                print("New row added successfully!")
                 conn.commit()
-            else:
-                print(f"The specified country '{identifier}' does not exist in the table. Please choose a valid country.")
 
+            else:
+                print("Invalid option. Please try again.")
         else:
             print("Invalid option. Please try again.")
 
         conn.close()
+
 
 
 def manage_update_data():
@@ -74,10 +94,9 @@ def manage_update_data():
             print("Exiting update data.")
             break
 
-        conn = connect()
+        conn = sqlite3.connect('global_inflation.db')
         cur = conn.cursor()
 
-        # Mapping option to table names
         table_mapping = {
             '1': 'Energy_Consumer_Price_Inflation_Table',
             '2': 'Food_Consumer_Price_Inflation_Table',
@@ -93,29 +112,24 @@ def manage_update_data():
             cur.execute(f'SELECT * FROM {table_name} WHERE "Country" = ? OR "Country Code" = ? OR "IMF Country Code" = ?',
                         (identifier, identifier, identifier))
             existing_data = cur.fetchone()
-
             if existing_data:
                 column_name = input("Enter the column name you want to update: ")
                 new_value = input("Enter the new value: ")
 
-                # Update the specified column for the specified country
                 cur.execute(f'UPDATE {table_name} SET "{column_name}" = ? WHERE "Country" = ? OR "Country Code" = ? OR "IMF Country Code" = ?',
                             (new_value, identifier, identifier, identifier))
-
                 print("Data updated successfully!")
                 conn.commit()
             else:
                 print(f"The specified country '{identifier}' does not exist in the table. Please choose a valid country.")
-
         else:
             print("Invalid option. Please try again.")
-
         conn.close()
 
 
 def manage_delete_data():
     while True:
-        print("\nDelete Inflation Data:")
+        print("\nWhich Inflation Data to Delete ?:")
         print("1. Energy Consumer Price Inflation")
         print("2. Food Consumer Price Inflation")
         print("3. Headline Consumer Price Inflation")
@@ -127,54 +141,41 @@ def manage_delete_data():
             print("Exiting delete data.")
             break
 
-        conn = connect()
+        conn = sqlite3.connect('global_inflation.db')
         cur = conn.cursor()
 
-        # Mapping option to table names
         table_mapping = {
             '1': 'Energy_Consumer_Price_Inflation_Table',
             '2': 'Food_Consumer_Price_Inflation_Table',
             '3': 'Headline_Consumer_Price_Inflation_Table',
             '4': 'Producer_Price_Inflation_Table'
         }
-
         table_name = table_mapping.get(option)
         if table_name:
-            identifier = input("Enter the country, country code, or IMF country code for which you want to delete data: ")
+            delete_option = input("Choose an option for deletion:\n1. Delete A Country's data(row)\n2. Delete entire column\n3. Delete specific value\nWhat would you like to do: ")
 
-            # Check if the specified country exists in the table
-            cur.execute(f'SELECT * FROM {table_name} WHERE "Country" = ? OR "Country Code" = ? OR "IMF Country Code" = ?',
-                        (identifier, identifier, identifier))
-            existing_data = cur.fetchone()
+            if delete_option == '1':
+                identifier = input("Enter the country, country code, or IMF country code for which you want to delete data: ")
+                cur.execute(f'DELETE FROM {table_name} WHERE "Country" = ? OR LOWER("Country Code") = ? OR LOWER("IMF Country Code") = ?',
+                            (identifier, identifier, identifier))
+                print("Row deleted successfully!")
 
-            if existing_data:
-                delete_option = input("Choose an option for deletion:\n1. Delete entire row\n2. Delete entire column\n3. Delete single value\nWhat would you like to do: ")
+            elif delete_option == '2':
+                column_name = input("Enter the column name you want to delete: ")
+                cur.execute(f'ALTER TABLE {table_name} DROP COLUMN "{column_name}"')
+                print("Column deleted successfully!")
 
-                if delete_option == '1':
-                    # Delete entire row for the specified country
-                    cur.execute(f'DELETE FROM {table_name} WHERE "Country" = ? OR "Country Code" = ? OR "IMF Country Code" = ?',
-                                (identifier, identifier, identifier))
-                    print("Row deleted successfully!")
-                elif delete_option == '2':
-                    column_name = input("Enter the column name you want to delete: ")
-                    # Delete entire column for the specified country
-                    cur.execute(f'ALTER TABLE {table_name} DROP COLUMN "{column_name}"')
-                    print("Column deleted successfully!")
-                elif delete_option == '3':
-                    column_name = input("Enter the column name for which you want to delete a single value: ")
-                    identifier = input("Enter the country, country code, or IMF country code for which you want to delete a single value: ")
-                    # Delete a specific value for the specified country and column/year
-                    cur.execute(f'UPDATE {table_name} SET "{column_name}" = DEFAULT WHERE "Country" = ? OR "Country Code" = ? OR "IMF Country Code" = ?',
-                                (identifier, identifier, identifier))
-                    print("Single value deleted successfully!")
+            elif delete_option == '3':
+                column_name = input("Enter the column name for which you want to delete a specific value: ")
+                identifier = input("Enter the country, country code, or IMF country code for which you want to delete a specific value: ").lower()
+                cur.execute(f'UPDATE {table_name} SET "{column_name}" = NULL WHERE "Country" = ? OR LOWER("Country Code") = ? OR LOWER("IMF Country Code") = ?',
+                            (identifier, identifier, identifier))
+                print("Value deleted successfully!")
 
-                else:
-                    print("Invalid option for deletion. Please try again.")
-                
-                conn.commit()
             else:
-                print(f"The specified country '{identifier}' does not exist in the table. Please choose a valid country.")
+                print("Invalid option for deletion. Please try again.")               
 
+            conn.commit()
         else:
             print("Invalid option. Please try again.")
 
